@@ -7,12 +7,50 @@
 //
 
 import UIKit
+import WatchConnectivity
 
-class ViewController: UIViewController {
+@available(iOS 9.0, *)
+class ViewController: UIViewController, WCSessionDelegate {
+    
+    var watchSession : WCSession?
 
+    @IBAction func resetButton(sender: AnyObject) {
+        NSUserDefaults().removeObjectForKey("counter")
+        countedLabel.text = "\(counter)"
+    }
+    
+    @IBOutlet var countedLabel: UILabel!
+    
+    var counter: Int {
+        return NSUserDefaults().integerForKey("counter")
+    }
+    
+    @IBAction func countUpButton(sender: AnyObject) {
+        NSUserDefaults().setInteger(counter+1, forKey: "counter")
+        countedLabel.text = "\(counter)"
+        
+        
+        
+        if let message : String = countedLabel.text {
+            do {
+                try watchSession?.updateApplicationContext(
+                    ["message" : message]
+                )
+            } catch let error as NSError {
+                NSLog("Updating the context failed: " + error.localizedDescription)
+            }
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        if(WCSession.isSupported()){
+            watchSession = WCSession.defaultSession()
+            watchSession!.delegate = self
+            watchSession!.activateSession()
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -22,4 +60,5 @@ class ViewController: UIViewController {
 
 
 }
+
 
